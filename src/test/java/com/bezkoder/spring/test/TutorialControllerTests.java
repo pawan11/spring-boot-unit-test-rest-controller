@@ -2,6 +2,7 @@ package com.bezkoder.spring.test;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -15,6 +16,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.config.ConfigDataResourceNotFoundException;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -42,11 +44,14 @@ public class TutorialControllerTests {
   void shouldCreateTutorial() throws Exception {
     Tutorial tutorial = new Tutorial(1, "Spring Boot @WebMvcTest", "Description", true);
 
+    
     mockMvc.perform(post("/api/tutorials").contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(tutorial)))
         .andExpect(status().isCreated())
         .andDo(print());
   }
+  
+
 
   @Test
   void shouldReturnTutorial() throws Exception {
@@ -167,5 +172,15 @@ public class TutorialControllerTests {
     mockMvc.perform(delete("/api/tutorials"))
          .andExpect(status().isNoContent())
          .andDo(print());
+  }
+  
+  @Test
+  void shouldThrowExceptionForDelete() throws Exception {
+    Tutorial tutorial = new Tutorial(1, "Spring Boot @WebMvcTest", "Description", true);
+//    when(tutorialRepository.deleteAll()).thenThrow(new NullPointerException("Test Exception"));
+    doThrow(new NullPointerException("Test exception")).when(tutorialRepository).deleteAll();
+    mockMvc.perform(delete("/api/tutorials"))
+    .andExpect(status().isInternalServerError())
+    .andDo(print());
   }
 }
